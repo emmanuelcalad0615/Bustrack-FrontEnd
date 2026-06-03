@@ -4,17 +4,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bus, Map, Bell, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-
-const links = [
-  { href: '/dashboard', label: 'Dashboard', icon: Bus },
-  { href: '/routes', label: 'Rutas', icon: Bus },
-  { href: '/map', label: 'Mapa', icon: Map },
-  { href: '/alerts', label: 'Alertas', icon: Bell },
-];
+import { useUnreadCount } from '../hooks/useAlerts';
 
 export function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const unreadCount = useUnreadCount();
+
+  const links = [
+    { href: '/dashboard', label: 'Dashboard', icon: Bus, badge: 0 },
+    { href: '/routes', label: 'Rutas', icon: Bus, badge: 0 },
+    { href: '/map', label: 'Mapa', icon: Map, badge: 0 },
+    { href: '/alerts', label: 'Alertas', icon: Bell, badge: unreadCount },
+  ];
 
   return (
     <nav className="bg-[#1E293B] border-b border-[#475569] px-6 py-3 flex items-center justify-between">
@@ -24,11 +26,11 @@ export function Navbar() {
           BusTrack
         </span>
         <div className="flex items-center gap-1">
-          {links.map(({ href, label, icon: Icon }) => (
+          {links.map(({ href, label, icon: Icon, badge }) => (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 pathname === href
                   ? 'bg-[#2563EB]/20 text-[#2563EB]'
                   : 'text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#334155]'
@@ -36,6 +38,11 @@ export function Navbar() {
             >
               <Icon size={15} />
               {label}
+              {badge > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-[#EF4444] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {badge > 99 ? '99+' : badge}
+                </span>
+              )}
             </Link>
           ))}
           {user?.role === 'ADMIN' && (

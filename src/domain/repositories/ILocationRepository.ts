@@ -1,7 +1,7 @@
 import type { BusLocation } from '../entities';
 
 export interface ILocationRepository {
-  getByBusId(busId: number): Promise<BusLocation>;
+  getByBusId(busId: number): Promise<BusLocation | null>;
   update(busId: number, latitude: number, longitude: number): Promise<BusLocation>;
   simulate(busId: number): Promise<BusLocation>;
 }

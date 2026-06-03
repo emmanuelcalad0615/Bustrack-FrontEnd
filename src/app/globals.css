@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0F172A;
+  --color-surface: #1E293B;
+  --color-surface-2: #334155;
+  --color-border: #475569;
+  --color-text: #F1F5F9;
+  --color-text-muted: #94A3B8;
+
+  --color-brand: #2563EB;
+  --color-brand-hover: #1D4ED8;
+
+  --color-bus-live: #22C55E;
+  --color-bus-stale: #F59E0B;
+  --color-bus-lost: #EF4444;
+  --color-bus-offline: #6B7280;
+  --color-bus-nogps: #64748B;
+
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-info: #06B6D4;
+
+  --color-role-user: #64748B;
+  --color-role-admin: #7C3AED;
+
+  --color-route-1: #4E79A7;
+  --color-route-2: #F28E2B;
+  --color-route-3: #E15759;
+  --color-route-4: #B07AA1;
+  --color-route-5: #9C755F;
+  --color-route-6: #76B7B2;
+  --color-route-7: #59A14F;
+  --color-route-8: #EDC948;
+  --color-route-9: #FF9DA7;
+  --color-route-10: #BAB0AC;
+
+  --focus-ring: 0 0 0 2px #2563EB;
+}
+
+:root {
+  background-color: #0F172A;
+  color: #F1F5F9;
+}
+
+body {
+  background-color: #0F172A;
+  color: #F1F5F9;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+*:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

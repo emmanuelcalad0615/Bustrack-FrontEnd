@@ -51,6 +51,43 @@ const FEATURES = [
   },
 ];
 
+const STATS = [
+  { value: '~5s', label: 'Actualización de GPS' },
+  { value: '500 m', label: 'Umbral de alerta' },
+  { value: 'Bogotá', label: 'Datos GTFS reales' },
+  { value: '24/7', label: 'Buses en vivo' },
+];
+
+const STEPS = [
+  { n: '01', title: 'Crea tu cuenta', desc: 'Regístrate gratis con tu correo. Sin tarjeta, sin complicaciones.' },
+  { n: '02', title: 'Suscríbete a tus rutas', desc: 'Elige las rutas que usas a diario y guárdalas como favoritas.' },
+  { n: '03', title: 'Sigue los buses en el mapa', desc: 'Mira la posición en vivo, con color según la frescura de la señal.' },
+  { n: '04', title: 'Recibe alertas de proximidad', desc: 'Te avisamos cuando un bus de tu ruta está a menos de 500 m.' },
+];
+
+const FAQS = [
+  {
+    q: '¿BusTrack es gratis?',
+    a: 'Sí. Crear cuenta y usar el rastreo, las suscripciones y las alertas no tiene costo.',
+  },
+  {
+    q: '¿Los datos de rutas son reales?',
+    a: 'Las rutas se sincronizan desde datos GTFS/OSM de Bogotá. Las posiciones de buses se mueven en tiempo real desde el backend.',
+  },
+  {
+    q: '¿Qué significan los colores de los buses?',
+    a: 'Verde = señal en vivo (<30s), ámbar = señal vieja, rojo = sin señal, gris = fuera de servicio o sin GPS.',
+  },
+  {
+    q: '¿Cómo funcionan las alertas de proximidad?',
+    a: 'Calculamos la distancia (Haversine) entre tu ubicación y los buses de tus rutas suscritas. Si alguno está a ≤500 m, se genera una alerta.',
+  },
+  {
+    q: '¿Qué diferencia hay entre USER y ADMIN?',
+    a: 'Un USER ve rutas, se suscribe y recibe alertas. Un ADMIN además gestiona rutas y buses, y sincroniza los datos GTFS de la ciudad.',
+  },
+];
+
 function fadeUpProps(delay = 0) {
   return {
     initial: { opacity: 0, y: 28 },
@@ -197,6 +234,22 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
+      {/* ── STATS ─────────────────────────────────────────────── */}
+      <section className="px-6 md:px-16 lg:px-24 py-12 border-t border-[#1E293B]">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#1E293B] rounded-2xl overflow-hidden border border-[#1E293B]">
+          {STATS.map((s, i) => (
+            <motion.div
+              key={s.label}
+              className="bg-[#0F172A] px-6 py-8 text-center"
+              {...fadeUpProps(i * 0.1)}
+            >
+              <p className="text-3xl md:text-4xl font-bold text-[#2563EB]">{s.value}</p>
+              <p className="mt-2 text-xs md:text-sm text-[#64748B]">{s.label}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
       {/* ── FEATURES ──────────────────────────────────────────── */}
       <section className="px-6 md:px-16 lg:px-24 py-24 border-t border-[#1E293B]">
         <motion.p
@@ -229,6 +282,102 @@ export default function LandingPage() {
               <h3 className="font-semibold text-[#F1F5F9] mb-2 text-lg">{f.title}</h3>
               <p className="text-[#64748B] text-sm leading-relaxed">{f.desc}</p>
             </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CÓMO FUNCIONA ─────────────────────────────────────── */}
+      <section className="px-6 md:px-16 lg:px-24 py-24 border-t border-[#1E293B]">
+        <motion.p
+          className="text-[#475569] text-xs font-semibold tracking-widest uppercase mb-4"
+          {...fadeUpProps(0)}
+        >
+          Cómo funciona
+        </motion.p>
+        <motion.h2
+          className="text-3xl md:text-4xl font-bold mb-16 max-w-md leading-tight"
+          {...fadeUpProps(0.1)}
+        >
+          De cero a seguir tu bus en cuatro pasos
+        </motion.h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {STEPS.map((step, i) => (
+            <motion.div key={step.n} {...fadeUpProps((i + 2) * 0.1)}>
+              <p className="text-5xl font-bold text-[#1E293B] mb-4">{step.n}</p>
+              <h3 className="font-semibold text-[#F1F5F9] mb-2 text-lg">{step.title}</h3>
+              <p className="text-[#64748B] text-sm leading-relaxed">{step.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── ¿QUIÉNES SOMOS? ───────────────────────────────────── */}
+      <section className="px-6 md:px-16 lg:px-24 py-24 border-t border-[#1E293B]">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          <div>
+            <motion.p
+              className="text-[#475569] text-xs font-semibold tracking-widest uppercase mb-4"
+              {...fadeUpProps(0)}
+            >
+              ¿Quiénes somos?
+            </motion.p>
+            <motion.h2
+              className="text-3xl md:text-4xl font-bold leading-tight"
+              {...fadeUpProps(0.1)}
+            >
+              Hecho para quienes
+              <br />
+              <span className="text-[#2563EB]">viven el transporte público</span>
+            </motion.h2>
+          </div>
+          <motion.div className="space-y-5 text-[#94A3B8] text-base leading-relaxed" {...fadeUpProps(0.2)}>
+            <p>
+              BusTrack nació como un proyecto académico de la Universidad de Medellín con una idea
+              simple: que esperar el bus deje de ser una incógnita. Tomamos datos abiertos GTFS/OSM
+              de Bogotá y los convertimos en información útil y en tiempo real.
+            </p>
+            <p>
+              Creemos en el software con propósito cívico: gratis, accesible y construido con
+              estándares profesionales —Clean Architecture, TypeScript estricto y diseño pensado
+              para todos. No vendemos tus datos; solo te ayudamos a no perder el bus.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── FAQ ───────────────────────────────────────────────── */}
+      <section className="px-6 md:px-16 lg:px-24 py-24 border-t border-[#1E293B]">
+        <motion.p
+          className="text-[#475569] text-xs font-semibold tracking-widest uppercase mb-4"
+          {...fadeUpProps(0)}
+        >
+          Preguntas frecuentes
+        </motion.p>
+        <motion.h2
+          className="text-3xl md:text-4xl font-bold mb-16 max-w-md leading-tight"
+          {...fadeUpProps(0.1)}
+        >
+          Lo que todos preguntan
+        </motion.h2>
+
+        <div className="max-w-3xl space-y-3">
+          {FAQS.map((faq, i) => (
+            <motion.details
+              key={faq.q}
+              className="group bg-[#0F172A] border border-[#1E293B] rounded-xl px-6 open:border-[#475569] transition-colors"
+              {...fadeUpProps(i * 0.05)}
+            >
+              <summary className="flex items-center justify-between gap-4 cursor-pointer list-none py-5 font-medium text-[#F1F5F9] focus-visible:outline-2 focus-visible:outline-[#2563EB] rounded-xl">
+                {faq.q}
+                <ArrowRight
+                  size={16}
+                  className="flex-shrink-0 text-[#64748B] transition-transform group-open:rotate-90"
+                  aria-hidden="true"
+                />
+              </summary>
+              <p className="text-[#64748B] text-sm leading-relaxed pb-5">{faq.a}</p>
+            </motion.details>
           ))}
         </div>
       </section>

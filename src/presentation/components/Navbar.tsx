@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Bus, Map, Bell, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useUnreadCount } from '../hooks/useAlerts';
+import { Logo } from './Logo';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -21,10 +22,9 @@ export function Navbar() {
   return (
     <nav className="bg-[#1E293B] border-b border-[#475569] px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-6">
-        <span className="font-semibold text-[#F1F5F9] flex items-center gap-2">
-          <Bus size={18} className="text-[#2563EB]" />
-          BusTrack
-        </span>
+        <Link href="/dashboard" aria-label="BusTrack — inicio">
+          <Logo size={26} />
+        </Link>
         <div className="flex items-center gap-1">
           {links.map(({ href, label, icon: Icon, badge }) => (
             <Link

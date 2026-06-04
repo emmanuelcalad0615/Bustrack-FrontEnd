@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, type RegisterDto } from '../../../application/dtos/AuthDtos';
 import { useAuth } from '../../../presentation/hooks/useAuth';
+import { Logo } from '../../../presentation/components/Logo';
 
 export default function RegisterPage() {
   const { register: registerUser } = useAuth();
@@ -27,9 +28,12 @@ export default function RegisterPage() {
   return (
     <div className="w-full max-w-sm">
       <div className="bg-[#1E293B] border border-[#475569] rounded-xl p-8 space-y-6">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-[#F1F5F9]">Crear cuenta</h1>
-          <p className="text-sm text-[#94A3B8]">Únete a BusTrack</p>
+        <div className="space-y-3">
+          <Logo size={32} />
+          <div className="space-y-0.5">
+            <h1 className="text-xl font-semibold text-[#F1F5F9]">Crear cuenta</h1>
+            <p className="text-sm text-[#94A3B8]">Únete a BusTrack</p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>

@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginDto } from '../../../application/dtos/AuthDtos';
 import { useAuth } from '../../../presentation/hooks/useAuth';
+import { Logo } from '../../../presentation/components/Logo';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -27,8 +28,8 @@ export default function LoginPage() {
   return (
     <div className="w-full max-w-sm">
       <div className="bg-[#1E293B] border border-[#475569] rounded-xl p-8 space-y-6">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-[#F1F5F9]">BusTrack</h1>
+        <div className="space-y-3">
+          <Logo size={32} />
           <p className="text-sm text-[#94A3B8]">Inicia sesión para continuar</p>
         </div>
 

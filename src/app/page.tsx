@@ -4,8 +4,10 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Bus, MapPin, Radio, Bell, Shield, ArrowRight } from 'lucide-react';
+import { MapPin, Radio, Bell, Shield, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '../presentation/stores/authStore';
+import { Logo } from '../presentation/components/Logo';
+import { BusIllustration } from '../presentation/components/BusIllustration';
 
 // Animated bus status dots — pure visual, no data
 const BUS_DOTS = [
@@ -74,7 +76,7 @@ export default function LandingPage() {
       <section className="relative flex-1 min-h-screen flex flex-col justify-center px-6 md:px-16 lg:px-24 pt-16 pb-24">
 
         {/* Bus dots background */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-50 lg:opacity-30" aria-hidden="true">
           {/* Grid lines */}
           <div className="absolute inset-0 opacity-[0.04]"
             style={{ backgroundImage: 'linear-gradient(#475569 1px, transparent 1px), linear-gradient(90deg, #475569 1px, transparent 1px)', backgroundSize: '80px 80px' }} />
@@ -104,61 +106,73 @@ export default function LandingPage() {
 
         {/* Brand */}
         <motion.div
-          className="flex items-center gap-2 mb-12"
+          className="mb-12 relative z-10"
           initial={{ opacity: 0, x: -16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <Bus size={20} className="text-[#2563EB]" aria-hidden="true" />
-          <span className="text-sm font-semibold tracking-widest uppercase text-[#2563EB]">BusTrack</span>
+          <Logo size={30} />
         </motion.div>
 
-        {/* Headline */}
-        <div className="max-w-3xl relative z-10">
-          <motion.h1
-            className="font-bold leading-[0.92] tracking-tight mb-8"
-            style={{ fontSize: 'clamp(3.5rem, 9vw, 8rem)' }}
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-          >
-            Tu ciudad,
-            <br />
-            <span className="text-[#2563EB]">en tiempo</span>
-            <br />
-            real.
-          </motion.h1>
+        {/* Hero content — text + bus illustration */}
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center relative z-10">
+          {/* Left: copy */}
+          <div>
+            <motion.h1
+              className="font-bold leading-[0.92] tracking-tight mb-8"
+              style={{ fontSize: 'clamp(3rem, 7vw, 6.5rem)' }}
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+            >
+              Tu ciudad,
+              <br />
+              <span className="text-[#2563EB]">en tiempo</span>
+              <br />
+              real.
+            </motion.h1>
 
-          <motion.p
-            className="text-[#94A3B8] text-lg md:text-xl max-w-xl mb-12 leading-relaxed"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            Rastreo GPS de buses en Bogotá. Suscríbete a tus rutas,
-            recibe alertas cuando el bus está cerca y síguelo en el mapa en vivo.
-          </motion.p>
+            <motion.p
+              className="text-[#94A3B8] text-lg md:text-xl max-w-xl mb-12 leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              Rastreo GPS de buses en Bogotá. Suscríbete a tus rutas,
+              recibe alertas cuando el bus está cerca y síguelo en el mapa en vivo.
+            </motion.p>
 
-          {/* CTAs */}
+            {/* CTAs */}
+            <motion.div
+              className="flex flex-wrap gap-4"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.35 }}
+            >
+              <Link
+                href="/register"
+                className="group inline-flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold px-8 py-4 rounded-xl transition-colors text-base"
+              >
+                Crear cuenta gratis
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 border border-[#475569] hover:border-[#94A3B8] text-[#F1F5F9] font-semibold px-8 py-4 rounded-xl transition-colors text-base"
+              >
+                Iniciar sesión
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Right: bus illustration */}
           <motion.div
-            className="flex flex-wrap gap-4"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.35 }}
+            className="hidden lg:block"
+            initial={{ opacity: 0, scale: 0.92, x: 30 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.3, ease: 'easeOut' }}
           >
-            <Link
-              href="/register"
-              className="group inline-flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold px-8 py-4 rounded-xl transition-colors text-base"
-            >
-              Crear cuenta gratis
-              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
-            </Link>
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 border border-[#475569] hover:border-[#94A3B8] text-[#F1F5F9] font-semibold px-8 py-4 rounded-xl transition-colors text-base"
-            >
-              Iniciar sesión
-            </Link>
+            <BusIllustration className="w-full max-w-xl ml-auto" />
           </motion.div>
         </div>
 
@@ -249,10 +263,7 @@ export default function LandingPage() {
 
       {/* ── FOOTER ────────────────────────────────────────────── */}
       <footer className="px-6 md:px-16 lg:px-24 py-8 border-t border-[#1E293B] flex items-center justify-between text-xs text-[#475569]">
-        <span className="flex items-center gap-1.5">
-          <Bus size={12} aria-hidden="true" />
-          BusTrack
-        </span>
+        <Logo size={18} />
         <span>Bogotá, Colombia · {new Date().getFullYear()}</span>
       </footer>
 

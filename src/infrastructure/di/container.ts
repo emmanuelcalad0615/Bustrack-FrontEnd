@@ -21,6 +21,7 @@ import { GetMyAlerts } from '../../application/usecases/GetMyAlerts';
 import { MarkAlertRead } from '../../application/usecases/MarkAlertRead';
 import { DeleteAlert } from '../../application/usecases/DeleteAlert';
 import { CheckProximity } from '../../application/usecases/CheckProximity';
+import { GetRandomLocation } from '../../application/usecases/GetRandomLocation';
 import { CreateRoute } from '../../application/usecases/CreateRoute';
 import { UpdateRoute } from '../../application/usecases/UpdateRoute';
 import { DeleteRoute } from '../../application/usecases/DeleteRoute';
@@ -73,6 +74,7 @@ export const getMyAlerts = new GetMyAlerts(alertRepository);
 export const markAlertRead = new MarkAlertRead(alertRepository);
 export const deleteAlert = new DeleteAlert(alertRepository);
 export const checkProximity = new CheckProximity(alertRepository);
+export const getRandomLocation = new GetRandomLocation(alertRepository);
 
 // Sync (ADMIN only)
 export const syncRoutes = new SyncRoutes(syncRepository);

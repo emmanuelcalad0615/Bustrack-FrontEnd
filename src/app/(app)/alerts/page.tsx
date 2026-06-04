@@ -8,16 +8,18 @@ import {
   useMarkReadMutation,
   useDeleteAlertMutation,
   useCheckProximityMutation,
+  useRandomProximityMutation,
 } from '../../../presentation/hooks/useAlerts';
-import { MAP_CENTER } from '../../../infrastructure/config/env';
 
 export default function AlertsPage() {
   const { data: alerts = [], isLoading } = useAlerts();
   const markRead = useMarkReadMutation();
   const deleteAlert = useDeleteAlertMutation();
   const checkProximity = useCheckProximityMutation();
+  const randomProximity = useRandomProximityMutation();
 
   const unreadCount = alerts.filter((a) => !a.read).length;
+  const anyPending = checkProximity.isPending || randomProximity.isPending;
 
   function handleCheckProximity() {
     if (!navigator.geolocation) {
@@ -31,16 +33,6 @@ export default function AlertsPage() {
     );
   }
 
-  // Demo: pretend the user is at Bogotá city center. Wide threshold (50 km)
-  // so scattered simulated buses across the city all register as "nearby".
-  function handleSimulateBogota() {
-    checkProximity.mutate({
-      latitude: MAP_CENTER.lat,
-      longitude: MAP_CENTER.lng,
-      thresholdMeters: 50_000,
-    });
-  }
-
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -52,22 +44,22 @@ export default function AlertsPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={handleSimulateBogota}
-            disabled={checkProximity.isPending}
+            onClick={() => randomProximity.mutate()}
+            disabled={anyPending}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#22C55E]/20 hover:bg-[#22C55E] text-[#22C55E] hover:text-white text-sm font-medium transition-colors disabled:opacity-50"
-            aria-label="Simular ubicación en Bogotá y buscar buses"
+            aria-label="Buscar buses cerca usando ubicación demo"
           >
-            {checkProximity.isPending ? (
+            {randomProximity.isPending ? (
               <Loader2 size={15} className="animate-spin" />
             ) : (
               <Building2 size={15} />
             )}
-            Simular en Bogotá
+            Buscar buses cerca
           </button>
           <button
             onClick={handleCheckProximity}
-            disabled={checkProximity.isPending}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2563EB]/20 hover:bg-[#2563EB] text-[#2563EB] hover:text-white text-sm font-medium transition-colors disabled:opacity-50"
+            disabled={anyPending}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#334155] hover:bg-[#475569] text-[#94A3B8] hover:text-[#F1F5F9] text-sm font-medium transition-colors disabled:opacity-50"
             aria-label="Buscar buses cerca de mi ubicación real"
           >
             <MapPin size={15} />

@@ -3,4 +3,4 @@ export type { IRouteRepository, CreateRouteDto, UpdateRouteDto, PaginatedResult,
 export type { IBusRepository, CreateBusDto, UpdateBusDto, ListBusesParams } from './IBusRepository';
 export type { ILocationRepository } from './ILocationRepository';
 export type { ISubscriptionRepository } from './ISubscriptionRepository';
-export type { IAlertRepository } from './IAlertRepository';
+export type { IAlertRepository, RandomLocation } from './IAlertRepository';

@@ -1,4 +1,4 @@
-import type { IAlertRepository } from '../../domain/repositories';
+import type { IAlertRepository, RandomLocation } from '../../domain/repositories';
 import type { Alert, ProximityResult } from '../../domain/entities';
 import { httpClient } from '../http/httpClient';
 
@@ -34,6 +34,11 @@ export class HttpAlertRepository implements IAlertRepository {
       longitude,
       ...(thresholdMeters !== undefined && { thresholdMeters }),
     });
+    return data.data;
+  }
+
+  async getRandomLocation(): Promise<RandomLocation> {
+    const { data } = await httpClient.get<ApiResponse<RandomLocation>>('/alerts/random-location');
     return data.data;
   }
 }

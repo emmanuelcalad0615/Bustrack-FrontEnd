@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Plus, Pencil, Trash2, RefreshCw, Zap, Navigation, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -258,8 +258,8 @@ export default function AdminPage() {
                     </thead>
                     <tbody className="divide-y divide-[#334155]">
                       {routes.map((r) => (
-                        <>
-                          <tr key={r.id} className="hover:bg-[#334155]/30 transition-colors">
+                        <Fragment key={r.id}>
+                          <tr className="hover:bg-[#334155]/30 transition-colors">
                             <td className="px-4 py-3 text-[#F1F5F9] font-medium">{r.name}</td>
                             <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{r.origin}</td>
                             <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{r.destination}</td>
@@ -284,13 +284,13 @@ export default function AdminPage() {
                             </td>
                           </tr>
                           {editingRoute?.id === r.id && (
-                            <tr key={`edit-${r.id}`}>
+                            <tr>
                               <td colSpan={5} className="px-4 py-3">
                                 <RouteForm initial={r} onDone={() => setEditingRoute(null)} />
                               </td>
                             </tr>
                           )}
-                        </>
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>
@@ -331,8 +331,8 @@ export default function AdminPage() {
                     </thead>
                     <tbody className="divide-y divide-[#334155]">
                       {buses.map((b) => (
-                        <>
-                          <tr key={b.id} className="hover:bg-[#334155]/30 transition-colors">
+                        <Fragment key={b.id}>
+                          <tr className="hover:bg-[#334155]/30 transition-colors">
                             <td className="px-4 py-3 text-[#F1F5F9] font-medium">{b.plate}</td>
                             <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{b.model}</td>
                             <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{b.capacity}</td>
@@ -366,13 +366,13 @@ export default function AdminPage() {
                             </td>
                           </tr>
                           {editingBus?.id === b.id && (
-                            <tr key={`edit-${b.id}`}>
+                            <tr>
                               <td colSpan={5} className="px-4 py-3">
                                 <BusForm routes={allRoutes} initial={b} onDone={() => setEditingBus(null)} />
                               </td>
                             </tr>
                           )}
-                        </>
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>

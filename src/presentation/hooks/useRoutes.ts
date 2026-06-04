@@ -8,11 +8,12 @@ import {
   subscribeToRoute,
   unsubscribeFromRoute,
 } from '../../infrastructure/di/container';
+import type { ListRoutesParams } from '../../domain/repositories';
 
-export function useRoutes() {
+export function useRoutes(params: ListRoutesParams = {}) {
   return useQuery({
-    queryKey: ['routes'],
-    queryFn: () => listRoutes.execute(),
+    queryKey: ['routes', params],
+    queryFn: () => listRoutes.execute(params),
   });
 }
 

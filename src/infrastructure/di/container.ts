@@ -29,6 +29,7 @@ import { UpdateBus } from '../../application/usecases/UpdateBus';
 import { DeleteBus } from '../../application/usecases/DeleteBus';
 import { SyncRoutes } from '../../application/usecases/SyncRoutes';
 import { SeedBuses } from '../../application/usecases/SeedBuses';
+import { SimulateBusGps } from '../../application/usecases/SimulateBusGps';
 
 // Storage
 const tokenStorage = new LocalTokenStorage();
@@ -76,3 +77,4 @@ export const checkProximity = new CheckProximity(alertRepository);
 // Sync (ADMIN only)
 export const syncRoutes = new SyncRoutes(syncRepository);
 export const seedBuses = new SeedBuses(syncRepository);
+export const simulateBusGps = new SimulateBusGps(locationRepository);

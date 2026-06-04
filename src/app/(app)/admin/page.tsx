@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Plus, Pencil, Trash2, RefreshCw, Zap } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, RefreshCw, Zap, Navigation, ChevronLeft, ChevronRight } from 'lucide-react';
 import { RequireAdmin } from '../../../presentation/guards/RequireAdmin';
 import { useRoutes } from '../../../presentation/hooks/useRoutes';
 import {
@@ -11,6 +11,7 @@ import {
   useCreateRouteMutation, useUpdateRouteMutation, useDeleteRouteMutation,
   useCreateBusMutation, useUpdateBusMutation, useDeleteBusMutation,
   useSyncRoutesMutation, useSeedBusesMutation,
+  useSimulateGpsMutation, useSimulateAllGpsMutation,
 } from '../../../presentation/hooks/useAdmin';
 import { createRouteSchema } from '../../../application/dtos/RouteDtos';
 import { createBusSchema } from '../../../application/dtos/BusDtos';
@@ -130,19 +131,56 @@ function BusForm({ onDone, routes, initial }: { onDone: () => void; routes: Rout
   );
 }
 
+const PAGE_SIZE = 10;
+
+function Pagination({ page, totalPages, onPrev, onNext, disabled }: {
+  page: number; totalPages: number; onPrev: () => void; onNext: () => void; disabled?: boolean;
+}) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-center gap-3 pt-2">
+      <button onClick={onPrev} disabled={page === 1 || disabled}
+        className="p-1.5 rounded-lg bg-[#0F172A] border border-[#475569] text-[#94A3B8] hover:text-[#F1F5F9] disabled:opacity-40 transition-colors"
+        aria-label="Página anterior"><ChevronLeft size={14} /></button>
+      <span className="text-xs text-[#94A3B8]">{page} / {totalPages}</span>
+      <button onClick={onNext} disabled={page === totalPages || disabled}
+        className="p-1.5 rounded-lg bg-[#0F172A] border border-[#475569] text-[#94A3B8] hover:text-[#F1F5F9] disabled:opacity-40 transition-colors"
+        aria-label="Página siguiente"><ChevronRight size={14} /></button>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('routes');
   const [showRouteForm, setShowRouteForm] = useState(false);
   const [editingRoute, setEditingRoute] = useState<Route | null>(null);
   const [showBusForm, setShowBusForm] = useState(false);
   const [editingBus, setEditingBus] = useState<Bus | null>(null);
+  const [routePage, setRoutePage] = useState(1);
+  const [busPage, setBusPage] = useState(1);
 
-  const { data: routes = [], isLoading: loadingRoutes } = useRoutes();
-  const { data: buses = [], isLoading: loadingBuses } = useBuses();
+  // Paginated route table
+  const { data: routeResult, isLoading: loadingRoutes } = useRoutes({ page: routePage, pageSize: PAGE_SIZE });
+  const routes = routeResult?.data ?? [];
+  const routeTotal = routeResult?.total ?? 0;
+  const routeTotalPages = Math.ceil(routeTotal / PAGE_SIZE) || 1;
+
+  // All routes for bus form selector (pageSize 100 = backend max)
+  const { data: allRoutesResult } = useRoutes({ pageSize: 100 });
+  const allRoutes = allRoutesResult?.data ?? [];
+
+  // Paginated bus table
+  const { data: busResult, isLoading: loadingBuses } = useBuses({ page: busPage, pageSize: PAGE_SIZE });
+  const buses = busResult?.data ?? [];
+  const busTotal = busResult?.total ?? 0;
+  const busTotalPages = Math.ceil(busTotal / PAGE_SIZE) || 1;
+
   const deleteRouteMutation = useDeleteRouteMutation();
   const deleteBusMutation = useDeleteBusMutation();
   const syncRoutesMutation = useSyncRoutesMutation();
   const seedBusesMutation = useSeedBusesMutation();
+  const simulateGpsMutation = useSimulateGpsMutation();
+  const simulateAllGpsMutation = useSimulateAllGpsMutation();
 
   function confirmDeleteRoute(id: number, name: string) {
     if (confirm(`¿Eliminar ruta "${name}"? Esta acción no se puede deshacer.`)) {
@@ -180,12 +218,20 @@ export default function AdminPage() {
               {seedBusesMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
               Seed buses
             </button>
+            <button
+              onClick={() => simulateAllGpsMutation.mutate(buses.map((b) => b.id))}
+              disabled={simulateAllGpsMutation.isPending || busTotal === 0}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#22C55E]/40 text-[#22C55E] hover:bg-[#22C55E]/10 text-sm transition-colors disabled:opacity-50"
+            >
+              {simulateAllGpsMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />}
+              Simular GPS todos
+            </button>
           </div>
         </div>
 
         <div className="flex gap-1 bg-[#1E293B] p-1 rounded-xl w-fit">
-          <button className={tabBtn('routes')} onClick={() => setTab('routes')}>Rutas ({routes.length})</button>
-          <button className={tabBtn('buses')} onClick={() => setTab('buses')}>Buses ({buses.length})</button>
+          <button className={tabBtn('routes')} onClick={() => setTab('routes')}>Rutas ({routeTotal})</button>
+          <button className={tabBtn('buses')} onClick={() => setTab('buses')}>Buses ({busTotal})</button>
         </div>
 
         {tab === 'routes' && (
@@ -198,56 +244,65 @@ export default function AdminPage() {
             </div>
             {showRouteForm && !editingRoute && <RouteForm onDone={() => setShowRouteForm(false)} />}
             {loadingRoutes ? <div className="h-32 bg-[#1E293B] rounded-xl animate-pulse" /> : (
-              <div className="bg-[#1E293B] border border-[#475569] rounded-xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#334155] text-[#94A3B8] text-xs">
-                      <th className="text-left px-4 py-3">Nombre</th>
-                      <th className="text-left px-4 py-3 hidden sm:table-cell">Origen</th>
-                      <th className="text-left px-4 py-3 hidden sm:table-cell">Destino</th>
-                      <th className="text-left px-4 py-3">Estado</th>
-                      <th className="px-4 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#334155]">
-                    {routes.map((r) => (
-                      <>
-                        <tr key={r.id} className="hover:bg-[#334155]/30 transition-colors">
-                          <td className="px-4 py-3 text-[#F1F5F9] font-medium">{r.name}</td>
-                          <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{r.origin}</td>
-                          <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{r.destination}</td>
-                          <td className="px-4 py-3">
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${r.active ? 'bg-[#22C55E]/10 text-[#22C55E]' : 'bg-[#334155] text-[#64748B]'}`}>
-                              {r.active ? 'Activa' : 'Inactiva'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-1 justify-end">
-                              <button onClick={() => { setEditingRoute(r); setShowRouteForm(false); }}
-                                className="p-1.5 rounded-lg text-[#475569] hover:text-[#2563EB] hover:bg-[#2563EB]/10 transition-colors"
-                                aria-label={`Editar ${r.name}`}>
-                                <Pencil size={14} />
-                              </button>
-                              <button onClick={() => confirmDeleteRoute(r.id, r.name)} disabled={deleteRouteMutation.isPending}
-                                className="p-1.5 rounded-lg text-[#475569] hover:text-[#EF4444] hover:bg-[#EF4444]/10 transition-colors disabled:opacity-50"
-                                aria-label={`Eliminar ${r.name}`}>
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                        {editingRoute?.id === r.id && (
-                          <tr key={`edit-${r.id}`}>
-                            <td colSpan={5} className="px-4 py-3">
-                              <RouteForm initial={r} onDone={() => setEditingRoute(null)} />
+              <>
+                <div className="bg-[#1E293B] border border-[#475569] rounded-xl overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#334155] text-[#94A3B8] text-xs">
+                        <th className="text-left px-4 py-3">Nombre</th>
+                        <th className="text-left px-4 py-3 hidden sm:table-cell">Origen</th>
+                        <th className="text-left px-4 py-3 hidden sm:table-cell">Destino</th>
+                        <th className="text-left px-4 py-3">Estado</th>
+                        <th className="px-4 py-3" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#334155]">
+                      {routes.map((r) => (
+                        <>
+                          <tr key={r.id} className="hover:bg-[#334155]/30 transition-colors">
+                            <td className="px-4 py-3 text-[#F1F5F9] font-medium">{r.name}</td>
+                            <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{r.origin}</td>
+                            <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{r.destination}</td>
+                            <td className="px-4 py-3">
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${r.active ? 'bg-[#22C55E]/10 text-[#22C55E]' : 'bg-[#334155] text-[#64748B]'}`}>
+                                {r.active ? 'Activa' : 'Inactiva'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1 justify-end">
+                                <button onClick={() => { setEditingRoute(r); setShowRouteForm(false); }}
+                                  className="p-1.5 rounded-lg text-[#475569] hover:text-[#2563EB] hover:bg-[#2563EB]/10 transition-colors"
+                                  aria-label={`Editar ${r.name}`}>
+                                  <Pencil size={14} />
+                                </button>
+                                <button onClick={() => confirmDeleteRoute(r.id, r.name)} disabled={deleteRouteMutation.isPending}
+                                  className="p-1.5 rounded-lg text-[#475569] hover:text-[#EF4444] hover:bg-[#EF4444]/10 transition-colors disabled:opacity-50"
+                                  aria-label={`Eliminar ${r.name}`}>
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
-                        )}
-                      </>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          {editingRoute?.id === r.id && (
+                            <tr key={`edit-${r.id}`}>
+                              <td colSpan={5} className="px-4 py-3">
+                                <RouteForm initial={r} onDone={() => setEditingRoute(null)} />
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  page={routePage}
+                  totalPages={routeTotalPages}
+                  onPrev={() => setRoutePage((p) => p - 1)}
+                  onNext={() => setRoutePage((p) => p + 1)}
+                  disabled={loadingRoutes}
+                />
+              </>
             )}
           </div>
         )}
@@ -260,58 +315,76 @@ export default function AdminPage() {
                 <Plus size={14} /> Nuevo bus
               </button>
             </div>
-            {showBusForm && !editingBus && <BusForm routes={routes} onDone={() => setShowBusForm(false)} />}
+            {showBusForm && !editingBus && <BusForm routes={allRoutes} onDone={() => setShowBusForm(false)} />}
             {loadingBuses ? <div className="h-32 bg-[#1E293B] rounded-xl animate-pulse" /> : (
-              <div className="bg-[#1E293B] border border-[#475569] rounded-xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#334155] text-[#94A3B8] text-xs">
-                      <th className="text-left px-4 py-3">Placa</th>
-                      <th className="text-left px-4 py-3 hidden sm:table-cell">Modelo</th>
-                      <th className="text-left px-4 py-3 hidden sm:table-cell">Cap.</th>
-                      <th className="text-left px-4 py-3">Estado</th>
-                      <th className="px-4 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#334155]">
-                    {buses.map((b) => (
-                      <>
-                        <tr key={b.id} className="hover:bg-[#334155]/30 transition-colors">
-                          <td className="px-4 py-3 text-[#F1F5F9] font-medium">{b.plate}</td>
-                          <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{b.model}</td>
-                          <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{b.capacity}</td>
-                          <td className="px-4 py-3">
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${b.active ? 'bg-[#22C55E]/10 text-[#22C55E]' : 'bg-[#334155] text-[#64748B]'}`}>
-                              {b.active ? 'Activo' : 'Inactivo'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-1 justify-end">
-                              <button onClick={() => { setEditingBus(b); setShowBusForm(false); }}
-                                className="p-1.5 rounded-lg text-[#475569] hover:text-[#2563EB] hover:bg-[#2563EB]/10 transition-colors"
-                                aria-label={`Editar ${b.plate}`}>
-                                <Pencil size={14} />
-                              </button>
-                              <button onClick={() => confirmDeleteBus(b.id, b.plate)} disabled={deleteBusMutation.isPending}
-                                className="p-1.5 rounded-lg text-[#475569] hover:text-[#EF4444] hover:bg-[#EF4444]/10 transition-colors disabled:opacity-50"
-                                aria-label={`Eliminar ${b.plate}`}>
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                        {editingBus?.id === b.id && (
-                          <tr key={`edit-${b.id}`}>
-                            <td colSpan={5} className="px-4 py-3">
-                              <BusForm routes={routes} initial={b} onDone={() => setEditingBus(null)} />
+              <>
+                <div className="bg-[#1E293B] border border-[#475569] rounded-xl overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#334155] text-[#94A3B8] text-xs">
+                        <th className="text-left px-4 py-3">Placa</th>
+                        <th className="text-left px-4 py-3 hidden sm:table-cell">Modelo</th>
+                        <th className="text-left px-4 py-3 hidden sm:table-cell">Cap.</th>
+                        <th className="text-left px-4 py-3">Estado</th>
+                        <th className="px-4 py-3" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#334155]">
+                      {buses.map((b) => (
+                        <>
+                          <tr key={b.id} className="hover:bg-[#334155]/30 transition-colors">
+                            <td className="px-4 py-3 text-[#F1F5F9] font-medium">{b.plate}</td>
+                            <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{b.model}</td>
+                            <td className="px-4 py-3 text-[#94A3B8] hidden sm:table-cell">{b.capacity}</td>
+                            <td className="px-4 py-3">
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${b.active ? 'bg-[#22C55E]/10 text-[#22C55E]' : 'bg-[#334155] text-[#64748B]'}`}>
+                                {b.active ? 'Activo' : 'Inactivo'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1 justify-end">
+                                <button
+                                  onClick={() => simulateGpsMutation.mutate(b.id)}
+                                  disabled={simulateGpsMutation.isPending}
+                                  className="p-1.5 rounded-lg text-[#475569] hover:text-[#22C55E] hover:bg-[#22C55E]/10 transition-colors disabled:opacity-50"
+                                  aria-label={`Simular GPS de ${b.plate}`}
+                                  title="Simular GPS"
+                                >
+                                  <Navigation size={14} />
+                                </button>
+                                <button onClick={() => { setEditingBus(b); setShowBusForm(false); }}
+                                  className="p-1.5 rounded-lg text-[#475569] hover:text-[#2563EB] hover:bg-[#2563EB]/10 transition-colors"
+                                  aria-label={`Editar ${b.plate}`}>
+                                  <Pencil size={14} />
+                                </button>
+                                <button onClick={() => confirmDeleteBus(b.id, b.plate)} disabled={deleteBusMutation.isPending}
+                                  className="p-1.5 rounded-lg text-[#475569] hover:text-[#EF4444] hover:bg-[#EF4444]/10 transition-colors disabled:opacity-50"
+                                  aria-label={`Eliminar ${b.plate}`}>
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
-                        )}
-                      </>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          {editingBus?.id === b.id && (
+                            <tr key={`edit-${b.id}`}>
+                              <td colSpan={5} className="px-4 py-3">
+                                <BusForm routes={allRoutes} initial={b} onDone={() => setEditingBus(null)} />
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  page={busPage}
+                  totalPages={busTotalPages}
+                  onPrev={() => setBusPage((p) => p - 1)}
+                  onNext={() => setBusPage((p) => p + 1)}
+                  disabled={loadingBuses}
+                />
+              </>
             )}
           </div>
         )}

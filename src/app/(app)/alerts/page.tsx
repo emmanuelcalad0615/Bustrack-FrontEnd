@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, BellOff, Trash2, MapPin, Loader2 } from 'lucide-react';
+import { Bell, BellOff, Trash2, MapPin, Loader2, Building2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -9,6 +9,7 @@ import {
   useDeleteAlertMutation,
   useCheckProximityMutation,
 } from '../../../presentation/hooks/useAlerts';
+import { MAP_CENTER } from '../../../infrastructure/config/env';
 
 export default function AlertsPage() {
   const { data: alerts = [], isLoading } = useAlerts();
@@ -30,6 +31,16 @@ export default function AlertsPage() {
     );
   }
 
+  // Demo: pretend the user is at Bogotá city center. Wide threshold (50 km)
+  // so scattered simulated buses across the city all register as "nearby".
+  function handleSimulateBogota() {
+    checkProximity.mutate({
+      latitude: MAP_CENTER.lat,
+      longitude: MAP_CENTER.lng,
+      thresholdMeters: 50_000,
+    });
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -39,19 +50,30 @@ export default function AlertsPage() {
             {unreadCount > 0 ? `${unreadCount} sin leer` : 'Todo al día'}
           </p>
         </div>
-        <button
-          onClick={handleCheckProximity}
-          disabled={checkProximity.isPending}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2563EB]/20 hover:bg-[#2563EB] text-[#2563EB] hover:text-white text-sm font-medium transition-colors disabled:opacity-50"
-          aria-label="Buscar buses cerca de mi ubicación"
-        >
-          {checkProximity.isPending ? (
-            <Loader2 size={15} className="animate-spin" />
-          ) : (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSimulateBogota}
+            disabled={checkProximity.isPending}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#22C55E]/20 hover:bg-[#22C55E] text-[#22C55E] hover:text-white text-sm font-medium transition-colors disabled:opacity-50"
+            aria-label="Simular ubicación en Bogotá y buscar buses"
+          >
+            {checkProximity.isPending ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
+              <Building2 size={15} />
+            )}
+            Simular en Bogotá
+          </button>
+          <button
+            onClick={handleCheckProximity}
+            disabled={checkProximity.isPending}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2563EB]/20 hover:bg-[#2563EB] text-[#2563EB] hover:text-white text-sm font-medium transition-colors disabled:opacity-50"
+            aria-label="Buscar buses cerca de mi ubicación real"
+          >
             <MapPin size={15} />
-          )}
-          Buscar buses cerca
-        </button>
+            Mi ubicación real
+          </button>
+        </div>
       </div>
 
       {isLoading ? (

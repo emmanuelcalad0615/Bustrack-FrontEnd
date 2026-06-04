@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { MapPin, Search, Check, Plus, Minus } from 'lucide-react';
+import { MapPin, Search, Check, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   useRoutes,
   useSubscriptions,
@@ -10,29 +10,38 @@ import {
 } from '../../../presentation/hooks/useRoutes';
 import { routeColor } from '../../../presentation/lib/routeColor';
 
+const PAGE_SIZE = 10;
+
 export default function RoutesPage() {
-  const [query, setQuery] = useState('');
-  const { data: routes = [], isLoading: loadingRoutes } = useRoutes();
+  const [page, setPage] = useState(1);
+  const [q, setQ] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');
+
+  const { data: result, isLoading: loadingRoutes } = useRoutes({
+    page,
+    pageSize: PAGE_SIZE,
+    q: debouncedQ || undefined,
+  });
+
+  const routes = result?.data ?? [];
+  const total = result?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
   const { data: subscriptions = [], isLoading: loadingSubs } = useSubscriptions();
   const subscribeMutation = useSubscribeMutation();
   const unsubscribeMutation = useUnsubscribeMutation();
 
-  // Map routeId → subscriptionId for quick lookup
   const subscribedMap = useMemo(
     () => new Map(subscriptions.map((s) => [s.routeId, s.id])),
     [subscriptions],
   );
 
-  const filtered = useMemo(() => {
-    const q = query.toLowerCase();
-    if (!q) return routes;
-    return routes.filter(
-      (r) =>
-        r.name.toLowerCase().includes(q) ||
-        r.origin.toLowerCase().includes(q) ||
-        r.destination.toLowerCase().includes(q),
-    );
-  }, [routes, query]);
+  function handleSearch(value: string) {
+    setQ(value);
+    setPage(1);
+    // Only send non-empty q to backend (min(1) validation)
+    setDebouncedQ(value.trim() || '');
+  }
 
   const isLoading = loadingRoutes || loadingSubs;
 
@@ -44,6 +53,7 @@ export default function RoutesPage() {
           <p className="text-sm text-[#94A3B8]">
             {subscriptions.length} suscripción{subscriptions.length !== 1 ? 'es' : ''} activa
             {subscriptions.length !== 1 ? 's' : ''}
+            {total > 0 && ` · ${total} rutas`}
           </p>
         </div>
       </div>
@@ -53,26 +63,26 @@ export default function RoutesPage() {
         <input
           type="text"
           placeholder="Buscar por nombre, origen o destino..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          value={q}
+          onChange={(e) => handleSearch(e.target.value)}
           className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-[#1E293B] border border-[#475569] text-[#F1F5F9] placeholder-[#475569] focus:outline-none focus:border-[#2563EB] text-sm transition-colors"
         />
       </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
             <div key={i} className="h-28 rounded-xl bg-[#1E293B] animate-pulse" />
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : routes.length === 0 ? (
         <div className="text-center py-16 text-[#94A3B8]">
           <MapPin size={32} className="mx-auto mb-2 opacity-40" />
           <p className="text-sm">No se encontraron rutas</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {filtered.map((route) => {
+          {routes.map((route) => {
             const subscriptionId = subscribedMap.get(route.id);
             const isSubscribed = subscriptionId !== undefined;
             const color = routeColor(route.id);
@@ -102,24 +112,14 @@ export default function RoutesPage() {
                 </div>
 
                 <div className="text-xs text-[#94A3B8] space-y-1">
-                  <p>
-                    <span className="text-[#64748B]">Origen: </span>
-                    {route.origin}
-                  </p>
-                  <p>
-                    <span className="text-[#64748B]">Destino: </span>
-                    {route.destination}
-                  </p>
+                  <p><span className="text-[#64748B]">Origen: </span>{route.origin}</p>
+                  <p><span className="text-[#64748B]">Destino: </span>{route.destination}</p>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
-                      route.active
-                        ? 'bg-[#22C55E]/10 text-[#22C55E]'
-                        : 'bg-[#334155] text-[#64748B]'
-                    }`}
-                  >
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    route.active ? 'bg-[#22C55E]/10 text-[#22C55E]' : 'bg-[#334155] text-[#64748B]'
+                  }`}>
                     {route.active ? 'Activa' : 'Inactiva'}
                   </span>
 
@@ -148,6 +148,30 @@ export default function RoutesPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1 || isLoading}
+            className="p-2 rounded-lg bg-[#1E293B] border border-[#475569] text-[#94A3B8] hover:text-[#F1F5F9] disabled:opacity-40 transition-colors"
+            aria-label="Página anterior"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <span className="text-sm text-[#94A3B8]">
+            Página {page} de {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || isLoading}
+            className="p-2 rounded-lg bg-[#1E293B] border border-[#475569] text-[#94A3B8] hover:text-[#F1F5F9] disabled:opacity-40 transition-colors"
+            aria-label="Página siguiente"
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
       )}
     </div>

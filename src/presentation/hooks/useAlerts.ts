@@ -45,8 +45,15 @@ export function useDeleteAlertMutation() {
 export function useCheckProximityMutation() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ latitude, longitude }: { latitude: number; longitude: number }) =>
-      checkProximity.execute(latitude, longitude),
+    mutationFn: ({
+      latitude,
+      longitude,
+      thresholdMeters,
+    }: {
+      latitude: number;
+      longitude: number;
+      thresholdMeters?: number;
+    }) => checkProximity.execute(latitude, longitude, thresholdMeters),
     onSuccess: (result) => {
       toast.success(
         result.alertsCreated > 0

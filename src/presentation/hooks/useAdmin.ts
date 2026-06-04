@@ -6,12 +6,15 @@ import {
   listBuses,
   createRoute, updateRoute, deleteRoute,
   createBus, updateBus, deleteBus,
-  syncRoutes, seedBuses,
+  syncRoutes, seedBuses, simulateBusGps,
 } from '../../infrastructure/di/container';
-import type { CreateRouteDto, UpdateRouteDto, CreateBusDto, UpdateBusDto } from '../../domain/repositories';
+import type { CreateRouteDto, UpdateRouteDto, CreateBusDto, UpdateBusDto, ListBusesParams } from '../../domain/repositories';
 
-export function useBuses() {
-  return useQuery({ queryKey: ['buses'], queryFn: () => listBuses.execute() });
+export function useBuses(params: ListBusesParams = {}) {
+  return useQuery({
+    queryKey: ['buses', params],
+    queryFn: () => listBuses.execute(params),
+  });
 }
 
 export function useCreateRouteMutation() {
@@ -82,6 +85,31 @@ export function useSeedBusesMutation() {
   return useMutation({
     mutationFn: (busesPerRoute: number) => seedBuses.execute(busesPerRoute),
     onSuccess: () => { toast.success('Buses generados'); qc.invalidateQueries({ queryKey: ['buses'] }); },
+    onError: (err: Error) => toast.error(err.message),
+  });
+}
+
+export function useSimulateGpsMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (busId: number) => simulateBusGps.execute(busId),
+    onSuccess: (_, busId) => {
+      qc.invalidateQueries({ queryKey: ['location', busId] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+}
+
+export function useSimulateAllGpsMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (busIds: number[]) => {
+      await Promise.all(busIds.map((id) => simulateBusGps.execute(id)));
+    },
+    onSuccess: (_, busIds) => {
+      busIds.forEach((id) => qc.invalidateQueries({ queryKey: ['location', id] }));
+      toast.success('GPS simulado para todos los buses');
+    },
     onError: (err: Error) => toast.error(err.message),
   });
 }
